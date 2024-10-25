@@ -1,16 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from './get-user.decorator';
+import { User } from './entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -28,7 +21,7 @@ export class AuthController {
 
   @Post('protected')
   @UseGuards(AuthGuard('auth'))
-  getProtected() {
-    return { message: 'This is a protected route', data: null };
+  getProtected(@GetUser() user: User) {
+    return { message: 'This is a protected route', data: user };
   }
 }
