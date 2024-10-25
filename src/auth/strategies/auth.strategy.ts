@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayload } from './interface/jwt.interface';
-import { AuthService } from './auth.service';
+import { JwtPayload } from '../interface/jwt.interface';
+import { AuthService } from '../auth.service';
 import * as CryptoJS from 'crypto-js';
 
 @Injectable()
