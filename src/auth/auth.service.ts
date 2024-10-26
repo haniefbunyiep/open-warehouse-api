@@ -118,15 +118,14 @@ export class AuthService {
         process.env.CRYPTO_SECRET_KEY,
       ).toString();
 
-      const payload = { encryptedEmail }; // Buat payload dari email
-      const JwtToken: string = await this.jwtService.sign(payload); // Buat JWT dari payload
+      const payload = { encryptedEmail };
+      const JwtToken: string = await this.jwtService.sign(payload);
 
       return {
         message: 'Sign In Success',
-        data: { accessToken: JwtToken }, // Kirim token JWT
+        data: { accessToken: JwtToken },
       };
     } catch (error) {
-      console.error('Error during signIn:', error); // Tambahkan log untuk kesalahan
       if (error instanceof HttpException) {
         throw error;
       }
