@@ -4,9 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import { JwtPayload } from './interface/jwt.interface';
 import { JwtService } from '@nestjs/jwt';
-import { AES, enc } from 'crypto-js';
+import { AES } from 'crypto-js';
 
 @Injectable()
 export class AuthService {
@@ -123,7 +122,7 @@ export class AuthService {
 
       return {
         message: 'Sign In Success',
-        data: { accessToken: JwtToken },
+        data: JwtToken,
       };
     } catch (error) {
       if (error instanceof HttpException) {
