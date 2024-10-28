@@ -10,15 +10,19 @@ import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/request/create-product.dto';
 import { UpdateProductDto } from './dto/request/update-product.dto';
 import { ProductDto } from './dto/product.dto';
+import { CategoriesService } from 'src/categories/categories.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
+    private categoryService: CategoriesService,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, file: Express.Multer.File) {
     const product = new Product();
 
     try {
@@ -31,12 +35,23 @@ export class ProductsService {
         baseSlug,
       );
 
+      const category = await this.categoryService.findOne(
+        createProductDto.category,
+      );
+
+      const imageUrl = await this.cloudinaryService.uploadFile(
+        file,
+        'products',
+      );
+
       Object.assign(product, {
         ...createProductDto,
         slug: uniqueSlug,
+        category: category,
+        imageUrl,
       });
 
-      return await this.productRepository.save(product);
+      return new ProductDto(await this.productRepository.save(product));
     } catch (error) {
       if (error instanceof BadRequestException) {
         return new BadRequestException('Failed to create product');
@@ -49,11 +64,12 @@ export class ProductsService {
     try {
       const products = await this.productRepository.find({
         where: { deletedAt: null },
+        relations: ['category'],
       });
 
       return products.flatMap((product) => new ProductDto(product));
     } catch (error) {
-      throw error;
+      return error;
     }
   }
 
@@ -61,6 +77,7 @@ export class ProductsService {
     try {
       const product = await this.productRepository.findOne({
         where: { slug },
+        relations: ['category'],
       });
 
       if (!product) {

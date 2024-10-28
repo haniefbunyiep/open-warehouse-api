@@ -1,3 +1,4 @@
+import { CategoryDto } from 'src/categories/dto/category.dto';
 import { Product } from '../entities/product.entity';
 
 export class ProductDto {
@@ -6,6 +7,8 @@ export class ProductDto {
   private price: number;
   private stock: number;
   private slug: string;
+  private category: CategoryDto;
+  private imageUrl: string;
   private createdAt: Date;
 
   constructor(product: Product) {
@@ -14,6 +17,8 @@ export class ProductDto {
     this.price = product.price;
     this.stock = product.stock;
     this.slug = product.slug;
+    this.category = new CategoryDto(product.category);
+    this.imageUrl = product.imageUrl;
     this.createdAt = product.createdAt;
   }
 }

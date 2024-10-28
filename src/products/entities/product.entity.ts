@@ -1,10 +1,13 @@
 import { BadRequestException } from '@nestjs/common';
 import { customAlphabet } from 'nanoid/non-secure'; // Changed this line
+import { Category } from 'src/categories/entities/category.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   Repository,
   UpdateDateColumn,
@@ -29,6 +32,13 @@ export class Product {
 
   @Column({ name: 'slug', unique: true })
   slug: string;
+
+  @Column({ name: 'imageUrl' })
+  imageUrl: string;
+
+  @ManyToOne(() => Category, (category) => category.products)
+  @JoinColumn({ name: 'category_id' })
+  category: Category;
 
   @CreateDateColumn()
   createdAt: Date;
