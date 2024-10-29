@@ -1,3 +1,4 @@
+import { UserSignUpDto } from './dto/user-signup.dto';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -61,9 +62,9 @@ export class AuthService {
     }
   }
 
-  async signUp(authCredentialsDto: AuthCredentialsDto) {
+  async signUp(userSignUpDto: UserSignUpDto) {
     try {
-      const { email, password } = authCredentialsDto;
+      const { email, password, fullname } = userSignUpDto;
 
       const existingUser = await this.userRepository.findOne({
         where: { email },
@@ -82,6 +83,7 @@ export class AuthService {
       const newUser = this.userRepository.create({
         email,
         password: hashedPassword,
+        fullname,
       });
 
       await this.userRepository.save(newUser);
@@ -129,7 +131,7 @@ export class AuthService {
         throw error;
       }
       throw new HttpException(
-        'Internal server error',
+        `Internal server error :${error}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
