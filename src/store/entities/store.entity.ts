@@ -5,6 +5,9 @@ import {
   PrimaryGeneratedColumn,
   OneToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Address } from '../../address/entities/address.entity';
 
@@ -22,4 +25,16 @@ export class Store {
   @OneToOne(() => Address)
   @JoinColumn()
   address: Address;
+
+  @Column()
+  imageUrl: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

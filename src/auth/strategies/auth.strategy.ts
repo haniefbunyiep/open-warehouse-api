@@ -16,7 +16,7 @@ export class AuthStrategy extends PassportStrategy(Strategy, 'auth') {
   }
 
   async validate(payload: JwtPayload) {
-    const encryptedToken = payload.encryptedEmail;
+    const encryptedToken = payload.secret;
 
     const decryptedToken = CryptoJS.AES.decrypt(
       encryptedToken,
