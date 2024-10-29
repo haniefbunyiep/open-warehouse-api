@@ -114,12 +114,12 @@ export class AuthService {
         );
       }
 
-      const encryptedEmail = AES.encrypt(
+      const secret = AES.encrypt(
         email,
         process.env.CRYPTO_SECRET_KEY,
       ).toString();
 
-      const payload = { encryptedEmail };
+      const payload = { secret };
       const JwtToken: string = await this.jwtService.sign(payload);
 
       return {
