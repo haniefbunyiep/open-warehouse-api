@@ -26,7 +26,7 @@ export class Store {
   @JoinColumn()
   address: Address;
 
-  @Column()
+  @Column({ nullable: true })
   imageUrl: string;
 
   @CreateDateColumn()
