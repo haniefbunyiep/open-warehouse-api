@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserAddress } from '../../address/entities/user-address.entity';
+import { Cart } from 'src/cart/entities/cart.entity';
 
 enum Role {
   ADMIN = 'admin',
@@ -36,6 +37,9 @@ export class User {
 
   @OneToMany(() => UserAddress, (userAddress) => userAddress.user)
   userAddresses: UserAddress[];
+
+  @OneToMany(() => Cart, (cart) => cart.user)
+  carts: Cart[];
 
   @Column({
     type: 'enum',

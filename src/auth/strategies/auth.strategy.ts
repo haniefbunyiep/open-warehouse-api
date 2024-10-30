@@ -24,6 +24,7 @@ export class AuthStrategy extends PassportStrategy(Strategy, 'auth') {
     ).toString(CryptoJS.enc.Utf8);
 
     const user = await this.authService.findUserByEmail(decryptedToken);
+
     return user;
   }
 }

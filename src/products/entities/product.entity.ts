@@ -11,7 +11,9 @@ import {
   PrimaryGeneratedColumn,
   Repository,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { CartItem } from 'src/cart/entities/cart-item.entity';
 
 @Entity({ name: 'products' })
 export class Product {
@@ -39,6 +41,9 @@ export class Product {
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'category_id' })
   category: Category;
+
+  @OneToMany(() => CartItem, (cartItem) => cartItem.product)
+  cartItems: CartItem[];
 
   @CreateDateColumn()
   createdAt: Date;

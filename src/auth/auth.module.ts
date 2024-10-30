@@ -7,10 +7,11 @@ import { User } from './entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthStrategy } from './strategies/auth.strategy';
+import { Cart } from 'src/cart/entities/cart.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Cart]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
