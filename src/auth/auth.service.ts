@@ -1,5 +1,5 @@
 import { UserSignUpDto } from './dto/user-signup.dto';
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AES } from 'crypto-js';
+import { UserPinDto } from './dto/user-pin.dto';
 
 @Injectable()
 export class AuthService {
@@ -132,6 +133,45 @@ export class AuthService {
       }
       throw new HttpException(
         `Internal server error :${error}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateUserPin(userPinDto: UserPinDto, user: User) {
+    const { id, email, pin: userPin } = user;
+    const { pin } = userPinDto;
+
+    const logger = new Logger('UserService');
+
+    try {
+      logger.log(`Starting updateUserPin for user ID: ${id}, Email: ${email}`);
+
+      const existingUser = await this.findUserById(id);
+      if (!existingUser) {
+        logger.warn(`User with ID: ${id} not found`);
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      logger.log(`User with ID: ${id} found`);
+
+      const hashedPin = await bcrypt.hash(pin, 10);
+      logger.debug(`Hashed PIN: ${hashedPin}`);
+
+      await this.userRepository.update({ id }, { pin: hashedPin });
+      logger.log(`User PIN updated successfully for user ID: ${id}`);
+
+      return {
+        message: 'User pin updated successfully',
+        data: [],
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        logger.error(`HttpException: ${error.message}`, error.stack);
+        throw error;
+      }
+      logger.error('Internal server error occurred', error.stack);
+      throw new HttpException(
+        'Internal server error',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
