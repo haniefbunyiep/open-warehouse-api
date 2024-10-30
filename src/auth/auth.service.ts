@@ -8,9 +8,12 @@ import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AES } from 'crypto-js';
 import { UserPinDto } from './dto/user-pin.dto';
+import { handleException } from 'src/utils/exception.util';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -19,59 +22,49 @@ export class AuthService {
   ) {}
 
   async findUserByEmail(email: string): Promise<User> {
+    this.logger.log(`Attempting to find user by email: ${email}`);
     try {
-      const user = await this.userRepository.findOne({
-        where: { email },
-      });
+      const user = await this.userRepository.findOne({ where: { email } });
 
       if (!user) {
+        this.logger.warn(`Email not found: ${email}`);
         throw new HttpException('Email not found', HttpStatus.NOT_FOUND);
       }
 
+      this.logger.log(`User found with email: ${email}`);
       return user;
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Internal server error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      handleException(error, 'Error finding user by email', this.logger);
     }
   }
 
   async findUserById(id: string) {
+    this.logger.log(`Attempting to find user by ID: ${id}`);
     try {
-      const user = this.userRepository.findOne({
-        where: {
-          id,
-        },
-      });
+      const user = await this.userRepository.findOne({ where: { id } });
 
-      if (!user)
+      if (!user) {
+        this.logger.warn(`User not found with ID: ${id}`);
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
 
+      this.logger.log(`User found with ID: ${id}`);
       return user;
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Internal server error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      handleException(error, 'Error finding user by ID', this.logger);
     }
   }
 
   async signUp(userSignUpDto: UserSignUpDto) {
+    const { email, password, fullname } = userSignUpDto;
+    this.logger.log(`Attempting to sign up user with email: ${email}`);
     try {
-      const { email, password, fullname } = userSignUpDto;
-
       const existingUser = await this.userRepository.findOne({
         where: { email },
       });
 
       if (existingUser) {
+        this.logger.warn(`Email already registered: ${email}`);
         throw new HttpException(
           'Email already registered',
           HttpStatus.CONFLICT,
@@ -89,28 +82,25 @@ export class AuthService {
 
       await this.userRepository.save(newUser);
 
+      this.logger.log(`User successfully registered with email: ${email}`);
       return { message: 'User successfully registered', data: null };
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Internal server error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      handleException(error, 'Error during user sign-up', this.logger);
     }
   }
 
   async signIn(userCredentialsDto: AuthCredentialsDto) {
     const { email, password } = userCredentialsDto;
+    this.logger.log(`Attempting to sign in user with email: ${email}`);
     try {
       const user = await this.findUserByEmail(email);
 
       const comparePassword = await bcrypt.compare(password, user.password);
 
       if (!comparePassword) {
+        this.logger.warn(`Password mismatch for user with email: ${email}`);
         throw new HttpException(
-          `Password doesn't Match`,
+          "Password doesn't match",
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -119,61 +109,43 @@ export class AuthService {
         email,
         process.env.CRYPTO_SECRET_KEY,
       ).toString();
-
       const payload = { secret };
       const JwtToken: string = await this.jwtService.sign(payload);
 
+      this.logger.log(`User signed in successfully with email: ${email}`);
       return {
         message: 'Sign In Success',
         data: JwtToken,
       };
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        `Internal server error :${error}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      handleException(error, 'Error during user sign-in', this.logger);
     }
   }
 
   async updateUserPin(userPinDto: UserPinDto, user: User) {
-    const { id, email, pin: userPin } = user;
+    const { id, email } = user;
     const { pin } = userPinDto;
 
-    const logger = new Logger('UserService');
-
+    this.logger.log(
+      `Starting updateUserPin for user ID: ${id}, Email: ${email}`,
+    );
     try {
-      logger.log(`Starting updateUserPin for user ID: ${id}, Email: ${email}`);
-
       const existingUser = await this.findUserById(id);
       if (!existingUser) {
-        logger.warn(`User with ID: ${id} not found`);
+        this.logger.warn(`User with ID: ${id} not found`);
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-      logger.log(`User with ID: ${id} found`);
 
       const hashedPin = await bcrypt.hash(pin, 10);
-      logger.debug(`Hashed PIN: ${hashedPin}`);
-
       await this.userRepository.update({ id }, { pin: hashedPin });
-      logger.log(`User PIN updated successfully for user ID: ${id}`);
 
+      this.logger.log(`User PIN updated successfully for user ID: ${id}`);
       return {
         message: 'User pin updated successfully',
         data: [],
       };
     } catch (error) {
-      if (error instanceof HttpException) {
-        logger.error(`HttpException: ${error.message}`, error.stack);
-        throw error;
-      }
-      logger.error('Internal server error occurred', error.stack);
-      throw new HttpException(
-        'Internal server error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      handleException(error, 'Error updating user PIN', this.logger);
     }
   }
 }
